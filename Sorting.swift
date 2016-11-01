@@ -46,11 +46,41 @@ struct Sorting {
         
         return tempArray
     }
+
+    func shellSort<T: Comparable>(items: [T]) -> [T] {
+        if items.count <= 1 {
+            return items
+        }
+
+        var h = 1
+        while h < (items.count / 3) {
+            h = 3 * h + 1
+        }
+
+        var tempArray = items
+        while h >= 1 {
+            for index in h..<tempArray.count {
+                let strideSteps = stride(from: index, through: h, by: -h)
+                for innerIndex in strideSteps {
+                    if tempArray[innerIndex] < tempArray[innerIndex-h] {
+                        swap(&(tempArray[innerIndex]), &(tempArray[innerIndex-h]))
+                    }
+                }
+            }
+
+            h = h / 3
+        }
+
+
+        return tempArray
+    }
+
+    // MARK: Private
 }
 
 let s = Sorting()
 
 let a = [3,6,8,4,24,6,8,7,4,3,8,7]
-let b = s.insertionSort(items: a)
+let b = s.shellSort(items: a)
 
 print(b)
