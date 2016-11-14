@@ -31,10 +31,6 @@ struct Finding {
         }
 
         return findingProcess(sliecedItems: items[0..<items.count])
-        
-//        let retItems = self.findingMaxProcess(comparedItems: items)
-//        
-//        return retItems[0]
     }
     
     func findSecondMax<T: Comparable>(_ items: [T]) -> T {
@@ -49,6 +45,40 @@ struct Finding {
         
         return retItems[0]
     }
+    
+    /*
+     You are a given a unimodal array of n distinct elements, 
+     meaning that its entries are in increasing order up until its maximum element, 
+     after which its elements are in decreasing order. 
+     Give an algorithm to compute the maximum element that runs in O(log n) time.
+    */
+    func findMaxElementInUnimodalAarray<T: Comparable>(_ items: [T]) -> T {
+        assert(!items.isEmpty)
+        
+        if items.count == 1 {
+            return items[0]
+        }
+        
+        if items.count == 2 {
+            return items.max()!
+        }
+        
+        let midIndex = items.midIndex
+        let midItem = items[midIndex]
+        let preItem = items[midIndex - 1]
+        let nextItem = items[midIndex + 1]
+        if midItem > preItem && midItem > nextItem {
+            return midItem
+        }
+        
+        if midItem > nextItem && midItem < preItem {
+            return self.findMaxElementInUnimodalAarray([T](items[0..<midIndex]))
+        }
+        
+        
+        return self.findMaxElementInUnimodalAarray([T](items[midIndex+1..<items.endIndex]))
+    }
+    
     
     private func findingMaxProcess<T: Comparable>(comparedItems: [T]) -> [T] {
         if comparedItems.count == 1 {
