@@ -136,6 +136,65 @@ struct Sorting {
         
         sort(lo: 0, hi: items.endIndex - 1)
     }
+    
+    func quickSort<T: Comparable>(items: [T]) -> [T] {
+        if items.count <= 1 {
+            return items
+        }
+        
+        typealias PartitionRet = (T, [T], [T])
+        
+        func partition(items: [T]) -> PartitionRet {
+            var partitionItems = items
+            
+            var i = partitionItems.startIndex + 1
+            var j = partitionItems.endIndex - 1
+            let pivotEle = partitionItems[partitionItems.startIndex]
+            while true {
+                while partitionItems[i] < pivotEle {
+                    i += 1
+                    
+                    if i == partitionItems.endIndex {
+                        break
+                    }
+                }
+                
+                while partitionItems[j] >= pivotEle {
+                    j -= 1
+                    
+                    if j == partitionItems.startIndex {
+                        break
+                    }
+                }
+                
+                if i >= j {
+                    break
+                }
+                
+                swap(&(partitionItems[i]), &(partitionItems[j]))
+            }
+            
+            if j != partitionItems.startIndex {
+                swap(&(partitionItems[partitionItems.startIndex]), &(partitionItems[j]))
+            }
+            
+            let leftItems = partitionItems[partitionItems.startIndex..<j]
+            let rightItems = partitionItems[(j+1)..<partitionItems.endIndex]
+            
+            return (partitionItems[j], [T](leftItems), [T](rightItems))
+        }
+        
+        let partitionRet = partition(items: items)
+        let leftSortedItems = quickSort(items: partitionRet.1)
+        let rightSortedItems = quickSort(items: partitionRet.2)
+        
+        var ret = [T]()
+        ret += leftSortedItems
+        ret.append(partitionRet.0)
+        ret += rightSortedItems
+        
+        return ret
+    }
 
     // MARK: Private
 }
