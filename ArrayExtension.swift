@@ -10,7 +10,11 @@ import Foundation
 
 extension Array {
     var midIndex: Int {
-        return Int(ceil(Double(self.count) / 2.0))
+        if self.count <= 1 {
+            return 0
+        }
+        
+        return Int(floor(Double(self.count - 1) / 2.0))
     }
 }
 

@@ -147,41 +147,44 @@ struct Sorting {
         func partition(items: [T]) -> PartitionRet {
             var partitionItems = items
             
+//            let pivotIndex = Int(arc4random() % UInt32((items.count)))
+//            if pivotIndex != 0 {
+//                swap(&(partitionItems[0]), &(partitionItems[pivotIndex]))
+//            }
+            
             var i = partitionItems.startIndex + 1
-            var j = partitionItems.endIndex - 1
+            
+            let number1 = partitionItems[0]
+            let number2 = partitionItems[partitionItems.midIndex]
+            let number3 = partitionItems[partitionItems.endIndex - 1]
+            let middleNumber = [number1, number2, number3].sorted()[1]
+            let middleNumberIndex = partitionItems.index(of: middleNumber)!
+            if middleNumberIndex != partitionItems.startIndex {
+                swap(&(partitionItems[partitionItems.startIndex]), &(partitionItems[middleNumberIndex]))
+            }
+            
             let pivotEle = partitionItems[partitionItems.startIndex]
-            while true {
-                while partitionItems[i] < pivotEle {
+            
+            for j in (partitionItems.startIndex + 1)..<partitionItems.endIndex {
+                if partitionItems[j] < pivotEle {
+                    if j != i {
+                        swap(&(partitionItems[i]), &(partitionItems[j]))
+                    }
+                    
                     i += 1
-                    
-                    if i == partitionItems.endIndex {
-                        break
-                    }
                 }
-                
-                while partitionItems[j] >= pivotEle {
-                    j -= 1
-                    
-                    if j == partitionItems.startIndex {
-                        break
-                    }
-                }
-                
-                if i >= j {
-                    break
-                }
-                
-                swap(&(partitionItems[i]), &(partitionItems[j]))
             }
             
-            if j != partitionItems.startIndex {
-                swap(&(partitionItems[partitionItems.startIndex]), &(partitionItems[j]))
+            let pivotEleIndex = i - 1
+            
+            if pivotEleIndex != partitionItems.startIndex {
+                swap(&(partitionItems[partitionItems.startIndex]), &(partitionItems[pivotEleIndex]))
             }
             
-            let leftItems = partitionItems[partitionItems.startIndex..<j]
-            let rightItems = partitionItems[(j+1)..<partitionItems.endIndex]
+            let leftItems = partitionItems[partitionItems.startIndex..<pivotEleIndex]
+            let rightItems = partitionItems[(pivotEleIndex+1)..<partitionItems.endIndex]
             
-            return (partitionItems[j], [T](leftItems), [T](rightItems))
+            return (partitionItems[pivotEleIndex], [T](leftItems), [T](rightItems))
         }
         
         let partitionRet = partition(items: items)
