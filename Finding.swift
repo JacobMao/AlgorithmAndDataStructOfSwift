@@ -9,41 +9,40 @@
 import Foundation
 
 struct Finding {
-    func findMax<T: Comparable>(_ items: [T]) -> T {
+    func rSelect<T: Comparable>(items: [T], at pos: UInt) -> T {
         assert(!items.isEmpty)
-        
-        if items.count == 2 {
-            return max(items[0], items[1])
-        }
-        
-        func findingProcess(sliecedItems: ArraySlice<T>) -> T {
-            if sliecedItems.count == 1 {
-                return sliecedItems[sliecedItems.startIndex]
-            }
-            
-            let leftItems = sliecedItems[sliecedItems.startIndex..<sliecedItems.midIndex]
-            let rightItems = sliecedItems[sliecedItems.midIndex..<sliecedItems.endIndex]
-            
-            let max1 = findingProcess(sliecedItems: leftItems)
-            let max2 = findingProcess(sliecedItems: rightItems)
-            
-            return max(max1, max2)
+
+        if items.count == 1 {
+            return items[0]
         }
 
-        return findingProcess(sliecedItems: items[0..<items.count])
+        let partitionRet = self.partition(items)
+        let pivotElePos = UInt(partitionRet.1.count)
+        if pivotElePos == pos {
+            return partitionRet.0
+        }
+
+        if pivotElePos > pos {
+            return self.rSelect(items: partitionRet.1, at: pos)
+        } else {
+            return self.rSelect(items: partitionRet.2, at: pos - pivotElePos - 1)
+        }
+    }
+    
+    func findMax<T: Comparable>(_ items: [T]) -> T {
+        assert(!items.isEmpty)
+
+        return self.rSelect(items: items, at: UInt(items.count - 1))
     }
     
     func findSecondMax<T: Comparable>(_ items: [T]) -> T {
-        assert(!items.isEmpty)
+        assert(items.count >= 2)
         
         if items.count == 2 {
             return min(items[0], items[1])
         }
         
-        var retItems = self.findingMaxProcess(comparedItems: items)
-        retItems = self.findingMaxProcess(comparedItems: [T](retItems.dropFirst()))
-        
-        return retItems[0]
+        return self.rSelect(items: items, at: UInt(items.count - 2))
     }
     
     /*
@@ -79,23 +78,35 @@ struct Finding {
         return self.findMaxElementInUnimodalAarray([T](items[midIndex+1..<items.endIndex]))
     }
     
-    
-    private func findingMaxProcess<T: Comparable>(comparedItems: [T]) -> [T] {
-        if comparedItems.count == 1 {
-            return comparedItems
+    private func partition<T: Comparable>(_ items: [T]) -> (T, [T], [T]) {
+        var partitionItems = items
+        
+        let pivotIndex = Int(arc4random() % UInt32((items.count)))
+        if pivotIndex != 0 {
+            swap(&(partitionItems[partitionItems.startIndex]), &(partitionItems[pivotIndex]))
         }
         
-        let leftItems = comparedItems[0..<comparedItems.midIndex]
-        let rightItems = comparedItems[comparedItems.midIndex..<comparedItems.count]
-        
-        var comparedRet1 = self.findingMaxProcess(comparedItems: [T](leftItems))
-        var comparedRet2 = self.findingMaxProcess(comparedItems: [T](rightItems))
-        if comparedRet1[0] > comparedRet2[0] {
-            comparedRet1.append(comparedRet2[0])
-            return comparedRet1
-        } else {
-            comparedRet2.append(comparedRet1[0])
-            return comparedRet2
+        let pivotEle = partitionItems[partitionItems.startIndex]
+        var i = partitionItems.startIndex + 1
+        for j in (partitionItems.startIndex + 1)..<partitionItems.endIndex {
+            if partitionItems[j] < pivotEle {
+                if j != i {
+                    swap(&(partitionItems[i]), &(partitionItems[j]))
+                }
+                
+                i += 1
+            }
         }
+        
+        let pivotEleIndex = i - 1
+        
+        if pivotEleIndex != partitionItems.startIndex {
+            swap(&(partitionItems[partitionItems.startIndex]), &(partitionItems[pivotEleIndex]))
+        }
+        
+        let leftItems = partitionItems[partitionItems.startIndex..<pivotEleIndex]
+        let rightItems = partitionItems[(pivotEleIndex+1)..<partitionItems.endIndex]
+        
+        return (partitionItems[pivotEleIndex], [T](leftItems), [T](rightItems))
     }
 }
