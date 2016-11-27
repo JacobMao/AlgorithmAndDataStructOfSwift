@@ -199,5 +199,16 @@ struct Sorting {
         return ret
     }
 
+    func heapSort<T: Comparable>(items: [T]) -> [T] {
+        var ret = [T]()
+
+        var heap = Heap(type: .min, datas: items)
+        while let nextItem = heap.extract() {
+            ret.append(nextItem)
+        }
+
+        return ret
+    }
+
     // MARK: Private
 }
