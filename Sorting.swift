@@ -210,5 +210,35 @@ struct Sorting {
         return ret
     }
 
+    // each element in items and key must be positive
+    func countingSort(items: [Int], key: Int32) -> [Int] {
+        assert(key > 0)
+
+        var ret = [Int](repeating: 0, count: items.count)
+        
+        var auxArray = [Int](repeating: 0, count: Int(key))
+        auxArray.append(0)
+
+        for i in items {
+            auxArray[i] += 1
+        }
+
+        for i in 0..<auxArray.count {
+            if i == 0 {
+                continue
+            }
+
+            auxArray[i] += auxArray[i-1]
+        }
+
+        for i in items.reversed() {
+            ret[auxArray[i] - 1] = i
+            auxArray[i] -= 1
+        }
+        
+        
+        return ret
+    }
+
     // MARK: Private
 }
