@@ -26,6 +26,10 @@ struct Stack<T> {
     mutating func pop() -> T? {
         return self.items.popLast()
     }
+
+    func top() -> T? {
+        return self.items.last
+    }
 }
 
 extension Stack: CustomDebugStringConvertible {

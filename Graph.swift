@@ -2,53 +2,49 @@ import Foundation
 
 struct GraphVertex<T: Equatable> {
     let value: T
+    private(set) var dTimestamp = 0
+    private(set) var fTimestamp = 0
 
     init(value: T) {
         self.value = value
     }
+
+    mutating func updateDTS(_ dts: Int) {
+        self.dTimestamp = dts
+    }
+
+    mutating func updateFTS(_ fts: Int) {
+        self.fTimestamp = fts
+    }
 }
 
-struct GraphSuperVertex<T: Equatable> {
-    let vertexes: [T]
+class Graph<T: Hashable & Comparable> {
+    typealias AdjDict = [T: [T]]
+    typealias VertexDict = [T : GraphVertex<T>]
     
-    init(vertexes: [T]) {
-        self.vertexes = vertexes
-    }
-
-    func containsVertex(value: T) -> Bool {
-        return self.vertexes.contains { $0 == value }
-    }
-}
-
-struct GraphEdge<T: Equatable> {
-    let vertex1: GraphVertex<T>
-    let vertex2: GraphVertex<T>
-
-    init(v1: GraphVertex<T>, v2: GraphVertex<T>) {
-        self.vertex1 = v1
-        self.vertex2 = v2
-    }
-}
-
-class Graph {
     private(set) var vNum: UInt = 0
     private(set) var eNum: UInt = 0
-    fileprivate var adjDict = [String: [String]]()
+    fileprivate var myAdjDict = AdjDict()
+    private var vertices = VertexDict()
 
-    func connectVertexes(v1: String, v2: String) {
-        if var vertexes = self.adjDict[v1] {
-            vertexes.append(v2)
-            self.adjDict[v1] = vertexes
-        } else {
+    func connectVertexes(v1: T, v2: T) {
+        if self.vertices[v1] == nil {
+            self.vertices[v1] = GraphVertex(value: v1)
             self.vNum += 1
-            self.adjDict[v1] = [v2]
         }
+
+        if self.vertices[v2] == nil {
+            self.vertices[v2] = GraphVertex(value: v2)
+            self.vNum += 1
+        }
+
+        self.updateEdge(v1: v1, v2: v2, to: &self.myAdjDict)
 
         self.eNum += 1
     }
 
     func minimumCut() -> UInt {
-        var currentAdj = self.adjDict
+        var currentAdj = self.myAdjDict
         var currentEdgeNumber = self.eNum
         
         func contract() -> UInt {
@@ -57,8 +53,8 @@ class Graph {
             }
 
             var edgeIndex = Int((arc4random() % UInt32(currentEdgeNumber)) + 1)
-            var adjV: String?
-            var selectedV: String?
+            var adjV: T?
+            var selectedV: T?
             for (v, adjVs) in currentAdj {
                 if edgeIndex > adjVs.count {
                     edgeIndex -= adjVs.count
@@ -81,7 +77,7 @@ class Graph {
                 $0 != endVer && $0 != selectedVer
             }
 
-            var nextGraph = [String: [String]]()
+            var nextGraph = [T: [T]]()
             var nextEdgeNumber: UInt = 0
             for (v, adjVs) in currentAdj {
                 if v == selectedVer {
@@ -107,16 +103,125 @@ class Graph {
         
         return contract() / 2
     }
+
+    func scc() -> [[T]]{
+        var ts = 0
+        
+        for node in self.vertices.keys {
+            if self.isExplored(node: node) {
+                continue
+            }
+
+            
+            let _ = self.dfsVisit(nodeValue: node,
+                                     adjDict: self.myAdjDict,
+                                     currentTimestamp: &ts)
+        }
+
+        var reversedEdges = AdjDict()
+        for (v, adjVs) in self.myAdjDict {
+            for headNode in adjVs {
+                self.updateEdge(v1: headNode, v2: v, to: &reversedEdges)
+            }
+        }
+
+        let orderedNodes = self.vertices.values.sorted { $0.fTimestamp > $1.fTimestamp }
+        for k in self.vertices.keys {
+            self.vertices[k]!.updateDTS(0)
+            self.vertices[k]!.updateFTS(0)
+        }
+
+        var ret = [[T]]()
+        ts = 0
+        for node in orderedNodes {
+            if self.isExplored(node: node.value) {
+                continue
+            }
+            
+            
+            let path = self.dfsVisit(nodeValue: node.value,
+                                     adjDict: reversedEdges,
+                                     currentTimestamp: &ts)
+
+            ret.append(path)
+        }
+
+        return ret
+    }
+
+    private func updateEdge(v1: T, v2: T, to adjDict: inout AdjDict) {
+        if adjDict[v1] != nil {
+            adjDict[v1]!.append(v2)
+        } else {
+            adjDict[v1] = [v2]
+        }
+    }
+
+    private func dfsVisit(nodeValue: T,
+                          adjDict: AdjDict,
+                          currentTimestamp: inout Int) -> [T] {
+        assert(self.vertices[nodeValue] != nil)
+
+        var ret = [T]()
+        
+        var s = Stack<T>()
+        s.push(nodeValue)
+        while let currentNode = s.top() {
+            if !self.isExplored(node: currentNode) {
+                currentTimestamp += 1
+                self.vertices[currentNode]!.updateDTS(currentTimestamp)
+            }
+
+            guard let edges = adjDict[currentNode] else {
+                currentTimestamp += 1
+                self.vertices[currentNode]!.updateFTS(currentTimestamp)
+
+                let _ = s.pop()
+                ret.append(currentNode)
+                
+                continue
+            }
+
+            var isFinished = true
+            for headNode in edges {
+                if self.isExplored(node: headNode) {
+                    continue
+                }
+
+                s.push(headNode)
+                isFinished = false
+                break
+            }
+
+            if isFinished {
+                currentTimestamp += 1
+                self.vertices[currentNode]!.updateFTS(currentTimestamp)
+
+                let _ = s.pop()
+                ret.append(currentNode)
+            }
+        }
+
+        return ret.reversed()
+    }
+
+    private func isExplored(node: T) -> Bool {
+        guard let v = self.vertices[node] else {
+            return false
+        }
+
+        return v.dTimestamp > 0
+    }
 }
 
 extension Graph: CustomStringConvertible {
     var description: String {
         var s = "\(self.vNum) vertices, \(self.eNum) edges\n"
 
-        let vertexes = self.adjDict.keys.sorted { $0 < $1 }
+        let vertexes = self.myAdjDict.keys.sorted { $0 < $1 }
         for v in vertexes {
             s += "\(v): "
-            let adjVertexes = self.adjDict[v]!
+            let adjVertexes = self.myAdjDict[v]!
             for adjV in adjVertexes {
                 s += "\(adjV) "
             }
