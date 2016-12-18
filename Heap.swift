@@ -5,7 +5,13 @@ enum HeapType {
     case min
 }
 
-struct Heap<T: Comparable> {
+protocol HeapItemProtocol : Comparable {
+    associatedtype KeyType: Equatable
+
+    var key : KeyType { get }
+}
+
+struct Heap<T: HeapItemProtocol> {
     private typealias CmpFunc = (T, T) -> Bool
     
     private var nodes: [T]
@@ -69,6 +75,42 @@ struct Heap<T: Comparable> {
         self.heapify(root: self.nodes.startIndex)
         
         return rootItem        
+    }
+
+    mutating func remove(nodeKey: T.KeyType) -> T?{
+        if self.nodes.isEmpty {
+            return nil
+        }
+
+        let nodeIndex = self.indexOf(nodeKey: nodeKey)
+        if nodeIndex == -1 {
+            return nil
+        }
+
+        if nodeIndex != self.nodes.endIndex - 1 {
+            swap(&(self.nodes[nodeIndex]), &(self.nodes[self.nodes.endIndex - 1]))
+        }
+        
+        let removedItem  = self.nodes.removeLast()
+
+        self.heapify(root: nodeIndex)
+
+        return removedItem
+    }
+
+    mutating func indexOf(nodeKey: T.KeyType) -> Int {
+        var ret = -1
+
+        for (i, n) in self.nodes.enumerated() {
+            if n.key != nodeKey {
+                continue
+            }
+
+            ret = i
+            break
+        }
+        
+        return ret
     }
 
     private func parent(nodeIndex: Int) -> Int {

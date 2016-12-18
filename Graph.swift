@@ -18,8 +18,44 @@ struct GraphVertex<T: Equatable> {
     }
 }
 
+struct GraphEdge<T: Equatable> {
+    let destNode: T
+    private(set) var length = 0
+}
+
+struct VertexForShortestPath<T: Equatable> {
+    let nodeValue: T
+    let weight: Int
+}
+
+extension VertexForShortestPath : HeapItemProtocol {
+    var key : T {
+        return self.nodeValue
+    }
+
+    static func < (lhs: VertexForShortestPath, rhs: VertexForShortestPath) -> Bool {
+        return lhs.weight < rhs.weight
+    }
+
+    static func <= (lhs: VertexForShortestPath, rhs: VertexForShortestPath) -> Bool {
+        return lhs.weight <= rhs.weight
+    }
+
+    static func == (lhs: VertexForShortestPath, rhs: VertexForShortestPath) -> Bool {
+        return lhs.weight == rhs.weight
+    }
+
+    static func > (lhs: VertexForShortestPath, rhs: VertexForShortestPath) -> Bool {
+        return lhs.weight > rhs.weight
+    }
+
+    static func >= (lhs: VertexForShortestPath, rhs: VertexForShortestPath) -> Bool {
+        return lhs.weight >= rhs.weight
+    }
+}
+
 class Graph<T: Hashable & Comparable> {
-    typealias AdjDict = [T: [T]]
+    typealias AdjDict = [T: [GraphEdge<T>]]
     typealias VertexDict = [T : GraphVertex<T>]
     
     private(set) var vNum: UInt = 0
@@ -27,7 +63,7 @@ class Graph<T: Hashable & Comparable> {
     fileprivate var myAdjDict = AdjDict()
     private var vertices = VertexDict()
 
-    func connectVertexes(v1: T, v2: T) {
+    func connectVertexes(v1: T, v2: T, length: Int) {
         if self.vertices[v1] == nil {
             self.vertices[v1] = GraphVertex(value: v1)
             self.vNum += 1
@@ -38,71 +74,71 @@ class Graph<T: Hashable & Comparable> {
             self.vNum += 1
         }
 
-        self.updateEdge(v1: v1, v2: v2, to: &self.myAdjDict)
+        self.updateEdge(v1: v1, v2: v2, length: length, to: &self.myAdjDict)
 
         self.eNum += 1
     }
 
-    func minimumCut() -> UInt {
-        var currentAdj = self.myAdjDict
-        var currentEdgeNumber = self.eNum
+    // func minimumCut() -> UInt {
+    //     var currentAdj = self.myAdjDict
+    //     var currentEdgeNumber = self.eNum
         
-        func contract() -> UInt {
-            if currentAdj.count <= 2 {
-                return currentEdgeNumber
-            }
+    //     func contract() -> UInt {
+    //         if currentAdj.count <= 2 {
+    //             return currentEdgeNumber
+    //         }
 
-            var edgeIndex = Int((arc4random() % UInt32(currentEdgeNumber)) + 1)
-            var adjV: T?
-            var selectedV: T?
-            for (v, adjVs) in currentAdj {
-                if edgeIndex > adjVs.count {
-                    edgeIndex -= adjVs.count
-                    continue
-                }
+    //         var edgeIndex = Int((arc4random() % UInt32(currentEdgeNumber)) + 1)
+    //         var adjV: T?
+    //         var selectedV: T?
+    //         for (v, adjVs) in currentAdj {
+    //             if edgeIndex > adjVs.count {
+    //                 edgeIndex -= adjVs.count
+    //                 continue
+    //             }
 
-                selectedV = v
-                adjV = adjVs[edgeIndex - 1]
-                break
-            }
+    //             selectedV = v
+    //             adjV = adjVs[edgeIndex - 1]
+    //             break
+    //         }
 
-            guard let endVer = adjV,
-                  let selectedVer = selectedV,
-                  let adjVsOfEndVer = currentAdj.removeValue(forKey: endVer),
-                  let adjVsOfSelectedVer = currentAdj[selectedVer] else {
-                return 0
-            }
+    //         guard let endVer = adjV,
+    //               let selectedVer = selectedV,
+    //               let adjVsOfEndVer = currentAdj.removeValue(forKey: endVer),
+    //               let adjVsOfSelectedVer = currentAdj[selectedVer] else {
+    //             return 0
+    //         }
 
-            let combinedEdges = (adjVsOfEndVer + adjVsOfSelectedVer).filter {
-                $0 != endVer && $0 != selectedVer
-            }
+    //         let combinedEdges = (adjVsOfEndVer + adjVsOfSelectedVer).filter {
+    //             $0 != endVer && $0 != selectedVer
+    //         }
 
-            var nextGraph = [T: [T]]()
-            var nextEdgeNumber: UInt = 0
-            for (v, adjVs) in currentAdj {
-                if v == selectedVer {
-                    continue
-                }
+    //         var nextGraph = [T: [T]]()
+    //         var nextEdgeNumber: UInt = 0
+    //         for (v, adjVs) in currentAdj {
+    //             if v == selectedVer {
+    //                 continue
+    //             }
 
-                let modifiedAdjVs = adjVs.map {
-                    return $0 == endVer ? selectedVer : $0
-                }
+    //             let modifiedAdjVs = adjVs.map {
+    //                 return $0 == endVer ? selectedVer : $0
+    //             }
 
-                nextGraph[v] = modifiedAdjVs
-                nextEdgeNumber += UInt(modifiedAdjVs.count)
-            }
+    //             nextGraph[v] = modifiedAdjVs
+    //             nextEdgeNumber += UInt(modifiedAdjVs.count)
+    //         }
 
-            nextGraph[selectedVer] = combinedEdges
-            nextEdgeNumber += UInt(combinedEdges.count)
+    //         nextGraph[selectedVer] = combinedEdges
+    //         nextEdgeNumber += UInt(combinedEdges.count)
             
-            currentAdj = nextGraph
-            currentEdgeNumber = nextEdgeNumber
+    //         currentAdj = nextGraph
+    //         currentEdgeNumber = nextEdgeNumber
             
-            return contract()
-        }
+    //         return contract()
+    //     }
         
-        return contract() / 2
-    }
+    //     return contract() / 2
+    // }
 
     func scc() -> [[T]]{
         var ts = 0
@@ -121,7 +157,7 @@ class Graph<T: Hashable & Comparable> {
         var reversedEdges = AdjDict()
         for (v, adjVs) in self.myAdjDict {
             for headNode in adjVs {
-                self.updateEdge(v1: headNode, v2: v, to: &reversedEdges)
+                self.updateEdge(v1: headNode.destNode, v2: v, length: 1, to: &reversedEdges)
             }
         }
 
@@ -149,11 +185,54 @@ class Graph<T: Hashable & Comparable> {
         return ret
     }
 
-    private func updateEdge(v1: T, v2: T, to adjDict: inout AdjDict) {
+    func shortestPathOfDijkstra(sourceV: T) -> [T : Int] {
+        var heapDatas = [VertexForShortestPath<T>]()
+        heapDatas.reserveCapacity(Int(self.vNum))
+        for k in self.vertices.keys {
+            if k == sourceV {
+                heapDatas.append(VertexForShortestPath(nodeValue: k, weight: 0))
+            } else {
+                heapDatas.append(VertexForShortestPath(nodeValue: k, weight: Int.max))
+            }
+        }
+        
+        var h = Heap(type: .min, datas: heapDatas)
+
+        var ret = [T : Int]()
+        var dealtV = Set<T>()
+        while let closestNode = h.extract() {
+            dealtV.insert(closestNode.nodeValue)
+            ret[closestNode.nodeValue] = closestNode.weight
+
+            guard let adjs = myAdjDict[closestNode.nodeValue] else {
+                continue
+            }
+
+            for edge in adjs {
+                if dealtV.contains(edge.destNode) {
+                    continue
+                }
+
+                guard let removedNode = h.remove(nodeKey: edge.destNode) else {
+                    continue
+                }
+
+                let weight = min(closestNode.weight + edge.length, removedNode.weight)
+                let newVertexData = VertexForShortestPath(nodeValue: edge.destNode, weight: weight)
+                h.insert(newVertexData)
+            }
+        }
+
+        return ret
+    }
+
+    private func updateEdge(v1: T, v2: T, length: Int, to adjDict: inout AdjDict) {
+        let edgeData = GraphEdge(destNode: v2, length: length)
+        
         if adjDict[v1] != nil {
-            adjDict[v1]!.append(v2)
+            adjDict[v1]!.append(edgeData)
         } else {
-            adjDict[v1] = [v2]
+            adjDict[v1] = [edgeData]
         }
     }
 
@@ -184,11 +263,11 @@ class Graph<T: Hashable & Comparable> {
 
             var isFinished = true
             for headNode in edges {
-                if self.isExplored(node: headNode) {
+                if self.isExplored(node: headNode.destNode) {
                     continue
                 }
 
-                s.push(headNode)
+                s.push(headNode.destNode)
                 isFinished = false
                 break
             }

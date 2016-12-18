@@ -85,7 +85,7 @@ class BinarySearchTree<T: Comparable>: ExpressibleByArrayLiteral {
             return self.throughDown(root: node, type: .min)
         }
 
-        
+        return nil
     }
     
     private func generateInorderWalk(node: Node?) -> [T] {

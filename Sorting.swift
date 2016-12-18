@@ -199,7 +199,7 @@ struct Sorting {
         return ret
     }
 
-    func heapSort<T: Comparable>(items: [T]) -> [T] {
+    func heapSort<T: HeapItemProtocol>(items: [T]) -> [T] {
         var ret = [T]()
 
         var heap = Heap(type: .min, datas: items)
