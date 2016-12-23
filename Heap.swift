@@ -11,6 +11,12 @@ protocol HeapItemProtocol : Comparable {
     var key : KeyType { get }
 }
 
+extension Int : HeapItemProtocol {
+    var key : Int {
+        return self
+    }
+}
+
 struct Heap<T: HeapItemProtocol> {
     private typealias CmpFunc = (T, T) -> Bool
     
@@ -23,6 +29,10 @@ struct Heap<T: HeapItemProtocol> {
     
     var size: Int {
         return self.nodes.count
+    }
+    
+    var top: T? {
+        return self.nodes.first
     }
     
     init(type: HeapType) {
