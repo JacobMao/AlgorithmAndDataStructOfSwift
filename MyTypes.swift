@@ -44,3 +44,25 @@ extension TreeNode {
         return left.value > right
     }
 }
+
+class SinglyListNode<T: Comparable> {
+    let value: T
+    private(set) var next: SinglyListNode<T>?
+    
+    init(value: T) {
+        self.value = value
+    }
+    
+    func updateNextNode(_ node: SinglyListNode<T>?) {
+        self.next = node
+    }
+}
+
+class DoublyListNode<T: Comparable> : SinglyListNode<T> {
+    private(set) var prev: DoublyListNode<T>?
+    
+    func updatePrevNode(_ node: DoublyListNode<T>?) {
+        self.prev = node
+    }
+}
+

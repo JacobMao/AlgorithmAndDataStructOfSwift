@@ -8,38 +8,28 @@
 
 import Foundation
 
-class ListNode<T> {
-    let value: T
-    fileprivate var next: ListNode<T>?
-    fileprivate var pre: ListNode<T>?
+struct LinkedListIterator<T: Comparable>: IteratorProtocol {
+    private let list: SinglyLinkedList<T>
+    private var nextNode: SinglyListNode<T>?
     
-    init(value: T) {
-        self.value = value
-    }
-}
-
-struct LinkedListIterator<T: Equatable>: IteratorProtocol {
-    private let list: LinkedList<T>
-    private var currentIndex = 0
-    
-    init(list: LinkedList<T>) {
+    init(list: SinglyLinkedList<T>) {
         self.list = list
+        self.nextNode = self.list.first
     }
 
     mutating func next() -> T? {
-        if self.currentIndex >= self.list.endIndex {
+        guard let currentNode = self.nextNode else {
             return nil
         }
 
-        let ret = self.list[self.currentIndex]
-        self.currentIndex += 1
+        self.nextNode = currentNode.next
 
-        return ret
+        return currentNode.value
     }
 }
 
-class LinkedList<T: Equatable>: ExpressibleByArrayLiteral {
-    public typealias Node = ListNode<T>
+class SinglyLinkedList<T: Comparable>: ExpressibleByArrayLiteral {
+    public typealias Node = SinglyListNode<T>
     
     fileprivate var nodeCount: UInt = 0
     fileprivate var head: Node?
@@ -59,8 +49,8 @@ class LinkedList<T: Equatable>: ExpressibleByArrayLiteral {
         }
 
         if let lastNode = self.tail {
-            lastNode.next = newNode
-            newNode.pre = lastNode
+            lastNode.updateNextNode(newNode)
+//            newNode.pre = lastNode
             self.tail = newNode
         } else {
             self.tail = newNode
@@ -68,60 +58,136 @@ class LinkedList<T: Equatable>: ExpressibleByArrayLiteral {
         
         self.nodeCount += 1
     }
+    
+    func insertToHead(_ item: T) {
+        let newNode = Node(value: item)
+        
+        guard let headNode = self.head else {
+            self.head = newNode
+            return
+        }
+        
+        newNode.updateNextNode(headNode)
+        self.head = newNode
+        self.nodeCount += 1
+    }
 
     func index(of item: T) -> Int? {
-        var node = self.head
-        
-        var ret = -1
-        while node != nil {
-            ret += 1
-            if node!.value == item {
-                break
-            }
-
-            node = node!.next
+        guard let searchResult = self.findElement(of: item) else {
+            return nil
         }
-
-        return ret == -1 ? nil : ret
+        
+        return searchResult.0
     }
 
     func remove(at index: Int) -> T {
         assert(index < self.endIndex && index >= 0)
 
-        var currentIndex = index - 1
-        var node = self.head
-        while currentIndex >= 0 && node != nil {
-            node = node?.next
-            currentIndex -= 1
-        }
-
-        guard let selectedNode = node else {
-            assert(false)
-        }
-        
-        selectedNode.pre?.next = selectedNode.next
-        selectedNode.next?.pre = selectedNode.pre
-
-        if index == 0 {
-            self.head = selectedNode.next
-
-            if self.count == 1 {
-                self.tail = selectedNode.next
+        defer {
+            if self.nodeCount == 1 {
+                self.tail = self.head
+            }
+            
+            if self.isEmpty {
+                self.tail = nil
             }
         }
 
-        if index == self.endIndex - 1 {
-            self.tail = selectedNode.pre
+        if index == 0 {
+            let ret = self.head!.value
+            self.head = self.head?.next
+            self.nodeCount -= 1
+            
+            return ret
         }
 
-        selectedNode.pre = nil
-        selectedNode.next = nil
+        guard let prevNode = self.findElement(at: index - 1) else {
+            assert(false)
+        }
+        
+        let ret = prevNode.next!.value
+        
+        prevNode.updateNextNode(prevNode.next?.next)
+        
+        if index == self.endIndex - 1 {
+            self.tail = prevNode
+        }
 
-        return selectedNode.value
+        self.nodeCount -= 1
+
+        return ret
+    }
+    
+    func remove(_ item: T) -> Bool {
+        guard let headNode = self.head else {
+            return false
+        }
+        
+        if headNode.value == item {
+            self.head = self.head?.next
+            return true
+        }
+        
+        var node = self.head
+        while let currentNode = node {
+            if let valueOfNextNode = currentNode.next?.value, valueOfNextNode == item {
+                currentNode.updateNextNode(currentNode.next?.next)
+                
+                return true
+            }
+
+            node = currentNode.next
+        }
+
+        return false
+    }
+    
+    func removeFirst() -> T {
+        return self.remove(at: 0)
+    }
+    
+    func removeLast() -> T {
+        return self.remove(at: self.endIndex - 1)
+    }
+    
+    func removeAll() {
+        self.head = nil
+        self.tail = nil
+        self.nodeCount = 0
+    }
+    
+    private func findElement(of item: T) -> (Int, Node)? {
+        var nodeIndex = 0
+        var node = self.head
+        while let currentNode = node {
+            if currentNode.value == item {
+                return (nodeIndex, currentNode)
+            }
+
+            nodeIndex += 1
+            node = currentNode.next
+        }
+
+        return nil
+    }
+    
+    private func findElement(at position: Int) -> Node? {
+        guard position < self.endIndex && position >= 0 else {
+            return nil
+        }
+
+        var node = self.head
+        var currentPos = position - 1
+        while node != nil && currentPos >= 0 {
+            currentPos -= 1
+            node = node!.next
+        }
+
+        return node
     }
 }
 
-extension LinkedList: Collection {
+extension SinglyLinkedList: Collection {
     var isEmpty: Bool {
         return self.nodeCount == 0
     }
