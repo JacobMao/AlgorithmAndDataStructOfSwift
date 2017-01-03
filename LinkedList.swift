@@ -81,7 +81,7 @@ class SinglyLinkedList<T: Comparable>: ExpressibleByArrayLiteral {
     }
 
     func remove(at index: Int) -> T {
-        assert(index < self.endIndex && index >= 0)
+        precondition(index < self.endIndex && index >= 0, "Index out of bounds")
 
         defer {
             if self.nodeCount == 1 {
@@ -102,7 +102,7 @@ class SinglyLinkedList<T: Comparable>: ExpressibleByArrayLiteral {
         }
 
         guard let prevNode = self.findElement(at: index - 1) else {
-            assert(false)
+            precondition(false, "Index out of bounds")
         }
         
         let ret = prevNode.next!.value
@@ -209,7 +209,7 @@ extension SinglyLinkedList: Collection {
     }
     
     subscript(position: Int) -> T {
-        assert(position < self.endIndex && position >= 0)
+        precondition(position < self.endIndex && position >= 0, "Index out of bounds")
 
         var node = self.head
         var currentPos = position - 1

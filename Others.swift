@@ -14,17 +14,6 @@ public class LeetTreeNode {
     }
 }
 
-//Definition for singly-linked list.
-public class LeetListNode {
-    public var val: Int
-    public var next: LeetListNode?
-    public init(_ val: Int) {
-        self.val = val
-        self.next = nil
-    }
-}
-
-
 struct OtherProblems {
     // 1. Two Sum
     // https://leetcode.com/problems/two-sum/
@@ -45,48 +34,6 @@ struct OtherProblems {
         }
         
         return []
-    }
-    
-    // 2. Add Two Numbers
-    // https://leetcode.com/problems/add-two-numbers/
-    static func addTwoNumbers(_ l1: LeetListNode?, _ l2: LeetListNode?) -> LeetListNode? {
-        var ret: LeetListNode? = nil
-        var currentRetNode: LeetListNode?
-        var isCarry = false
-        var currentNode1 = l1
-        var currentNode2 = l2
-        while currentNode1 != nil || currentNode2 != nil {
-            let node = LeetListNode(0)
-            
-            let number1 = currentNode1?.val ?? 0
-            let number2 = currentNode2?.val ?? 0
-            let sum = number1 + number2 + (isCarry ? 1 : 0)
-            if sum >= 10 {
-                node.val = sum % 10
-                isCarry = true
-            } else {
-                node.val = sum
-                isCarry = false
-            }
-            
-            if ret == nil {
-                ret = node
-                currentRetNode = node
-            } else {
-                currentRetNode?.next = node
-                currentRetNode = node
-            }
-            
-            currentNode1 = currentNode1?.next
-            currentNode2 = currentNode2?.next
-        }
-        
-        if isCarry {
-            let node = LeetListNode(1)
-            currentRetNode?.next = node
-        }
-        
-        return ret
     }
     
     // 7. Reverse Integer
@@ -122,28 +69,6 @@ struct OtherProblems {
 //    static func myAtoi(_ str: String) -> Int {
 //        
 //    }
-    
-    // 19. Remove Nth Node From End of List
-    // https://leetcode.com/problems/remove-nth-node-from-end-of-list/
-    static func removeNthFromEnd(_ head: LeetTreeNode?, _ n: Int) -> LeetTreeNode? {
-        let sentinel = LeetTreeNode(-1)
-        sentinel.next = head
-        
-        var slowP = sentinel
-        var fastP = sentinel
-        for _ in 0..<n {
-            fastP = fastP?.next
-        }
-        
-        while fastP?.next != nil {
-            slowP = slowP?.next
-            fastP = fastP?.next
-        }
-        
-        slowP?.next = slowP?.next?.next
-        
-        return sentinel.next
-    }
     
     static func fizzBuzz(_ n: Int) -> [String] {
         var ret = [String]()
