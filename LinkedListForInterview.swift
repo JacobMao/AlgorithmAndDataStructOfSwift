@@ -1,13 +1,3 @@
-//Definition for singly-linked list.
-public class LeetListNode {
-	public var val: Int
-	public var next: LeetListNode?
-	public init(_ val: Int) {
-		self.val = val
-		self.next = nil
-	}
-}
-
 struct LinkedListForInterview {
 	// 2. Add Two Numbers
 	// https://leetcode.com/problems/add-two-numbers/
