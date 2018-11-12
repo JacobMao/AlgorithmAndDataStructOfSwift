@@ -9,6 +9,12 @@ struct Sorting {
         return sortedItems == items
     }
     
+    /*
+     选择排序
+     所有情况都是O(n^2)
+
+     这是一个不稳定的排序算法
+     */
     func selectionSort<T: Comparable>(items: [T]) -> [T] {
         if items.count <= 1 {
             return items
@@ -37,6 +43,14 @@ struct Sorting {
         return tempArray
     }
     
+    /*
+     插入排序
+     best case: O(n)，所有数据已经是升序的
+     worst case: O(n^2)，所有数据都是逆序的
+     average case: O(n^2)
+
+     这是一个稳定的排序算法
+     */
     func insertionSort<T: Comparable>(items: [T]) -> [T] {
         if items.count <= 1 {
             return items
@@ -55,6 +69,12 @@ struct Sorting {
         return tempArray
     }
 
+    /*
+     shell排序
+     average case: O(n^1.25)
+
+     这是一个不稳定的排序算法
+     */
     func shellSort<T: Comparable>(items: [T]) -> [T] {
         if items.count <= 1 {
             return items
@@ -83,6 +103,12 @@ struct Sorting {
         return tempArray
     }
     
+    /*
+     归并排序
+     average case: O(nlognn)
+
+     这是一个稳定的排序算法
+     */
     func mergeSort<T: Comparable>(items: inout [T]) {
         func mergeProcedure(l: Int, m: Int, r: Int) {
             if items[m] <= items[m+1] {
